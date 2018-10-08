@@ -1,0 +1,21 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t richrem/docker-multi-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run richrem/docker-multi-test npm run test -- --coverage
+
+after_success:
+  - docker build -t richrem/docker-multi-client ./client
+  - docker build -t richrem/docker-multi-server ./server
+  - docker build -t richrem/docker-multi-worker ./worker
+  - docker build -t richrem/docker-multi-nginx ./nginx
+  # login to docker CLI, then push to docker hub
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  - docker push richrem/docker-multi-client
+  - docker push richrem/docker-multi-server
+  - docker push richrem/docker-multi-worker
+  - docker push richrem/docker-multi-nginx
